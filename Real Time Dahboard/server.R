@@ -684,7 +684,7 @@ shinyServer(function(input,output){
     }
     x
   })
-  output$table <- renderDataTable({
+  output$table <- renderTable({
     PAWL <- as.numeric(c(pgd3a(),pgd3b(),pgd3c(),pgd3r(),pgd3a()+pgd3b()+pgd3c()+pgd3r()))
     GuidePlateR <- as.numeric(c(ggd2a(),ggd2b(),ggd2c(),ggd2r(),ggd2a()+ggd2b()+ggd2c()+ggd2r()))
     GuidePlateL <- as.numeric(c(ggd1a(),ggd1b(),ggd1c(),ggd1r(),ggd1a()+ggd1b()+ggd1c()+ggd1r()))
@@ -693,7 +693,7 @@ shinyServer(function(input,output){
     a=matrix(Grades,nrow =5, ncol = 5, dimnames = list(c("A","B","C","R","Total"),c("Grade","PAWL","GuidePlate(GD2)","GuidePlate(GD1)","GuidePlate(Total)")))
     a
   })
-  output$table1 <- renderDataTable({
+  output$table1 <- renderTable({
     GuidePlate <- as.numeric(c(ggd3aa(),ggd3ab(),ggd3ar(),ggd3bb(),ggd3bc(),ggd3br(),ggd3ca(),ggd3cc(),ggd3cr(),ggd3r(),ggd3aa()+ggd3ab()+ggd3ar()+ggd3bb()+ggd3bc()+ggd3br()+ggd3ca()+ggd3cc()+ggd3cr()+ggd3r()))
     Grades =c(c("AA","AB","AR","BB","BC","BR","CA","CC","CR","R","Total"),GuidePlate)
     a= matrix(Grades,nrow= 11, ncol=2, dimnames=list(c("AA","AB","AR","BB","BC","BR","CA","CC","CR","R","Total"),c("Grade","GuidePlate(Total Grade)")))
@@ -706,7 +706,7 @@ shinyServer(function(input,output){
   })
 
 
-  output$table2 <- renderDataTable({
+  output$table2 <- renderTable({
     Parts <- as.numeric(c(guidep(),pawlp(),totalp()))
     Rej <- as.numeric(c(guider(),pawlr(),totalr()))
     total <- as.numeric(c(guidep()+guider(),pawlp()+pawlr(),totalp()+totalr()))
@@ -714,14 +714,14 @@ shinyServer(function(input,output){
     a= matrix(Grades,nrow= 3, ncol=4, dimnames=list(c("Guide Plate","PAWL","Total"),c("Part Name","Accepted","Rejected","Total")))
     a
   })
-  output$table3 <- renderDataTable({
+  output$table3 <- renderTable({
     from <- as.numeric(c(b[1:1,2:2],b[3:3,2:2],b[5:5,2:2]))
     to <- as.numeric(c(b[2:2,2:2],b[4:4,2:2],b[6:6,2:2]))
     Grades =c(c("A","B","C"),from,to)
     a= matrix(Grades,nrow= 3, ncol=3, dimnames=list(c("A","B","C"),c("Grade","From","To")))
     a
   }) 
-  output$table4 <- renderDataTable({
+  output$table4 <- renderTable({
     from <- as.numeric(c(b[7:7,2:2],b[9:9,2:2],b[11:11,2:2]))
     to <- as.numeric(c(b[8:8,2:2],b[10:10,2:2],b[12:12,2:2]))
     Grades =c(c("A","B","C"),from,to)
@@ -792,7 +792,7 @@ shinyServer(function(input,output){
       as.data.frame() %>%
       head(15)
   }, digits = 1)
-  output$tbl1 <- renderDataTable({
+  output$tbl1 <- renderTable({
     if(input$radio2=="1"){
       count <- as.numeric(c(ggd1a()+ggd2a(),ggd1b()+ggd2b(),ggd1c()+ggd2c(),ggd1r()+ggd2r(),ggd1a()+ggd2a()+ggd1b()+ggd2b()+ggd1c()+ggd2c()+ggd1r()+ggd2r()))
       Grades =c(c("A","B","C","R","Total"),count)
@@ -893,7 +893,7 @@ shinyServer(function(input,output){
     }
     a
   })
-  output$tbl2 <- renderDataTable({
+  output$tbl2 <- renderTable({
     if(input$p2=="1"){
       count <- as.numeric(c(pgd3a(),pgd3b(),pgd3c(),pgd3r(),pgd3a()+pgd3b()+pgd3c()+pgd3r()))
       Grades =c(c("A","B","C","R","Total"),count)
@@ -958,7 +958,7 @@ shinyServer(function(input,output){
     }
     a
   }) 
-  output$tbl3 <- renderDataTable({
+  output$tbl3 <- renderTable({
     if(input$l2=="1"){
       count <- as.numeric(c(ggd1a(),ggd1b(),ggd1c(),ggd1r(),ggd1a()+ggd1b()+ggd1c()+ggd1r()))
       Grades =c(c("A","B","C","R","Total"),count)
@@ -1023,7 +1023,7 @@ shinyServer(function(input,output){
     }
     a
   })
-  output$tbl4 <- renderDataTable({
+  output$tbl4 <- renderTable({
     if(input$r2=="1"){
       count <- as.numeric(c(ggd2a(),ggd2b(),ggd2c(),ggd2r(),ggd2a()+ggd2b()+ggd2c()+ggd2r()))
       Grades =c(c("A","B","C","R","Total"),count)
