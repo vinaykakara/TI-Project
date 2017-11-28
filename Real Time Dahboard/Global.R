@@ -17,7 +17,7 @@ mydb <- dbPool(
 b<-dbReadTable(mydb,"limits")
 poolClose(mydb)
 
-
+l<-read.csv("Shift.txt",sep="-",header = TRUE)
 readpawl<-function(){
   invalidateLater(60000,session=NULL)
   mydb <- dbPool(
@@ -400,23 +400,23 @@ subdata <- reactive({
  
   Gsort() %>%
     filter(
-      hms(Gsort()$Time)>=hms("7H 0M 0S"),
-      hms(Gsort()$Time)<=hms("15H 0M 0S")
+      hms(Gsort()$Time)>=hms(l$start[1]),
+      hms(Gsort()$Time)<=hms(l$end[1])
     )
 })
 subdata1 <- reactive({
 
   Gsort() %>%
     filter(
-      hms(Gsort()$Time)>=hms("15H 0M 0S"),
-      hms(Gsort()$Time)<=hms("23H 0M 0S")
+      hms(Gsort()$Time)>=hms(l$start[2]),
+      hms(Gsort()$Time)<=hms(l$end[2])
     )
 })
 subdata2 <- reactive({
  
   Gsort() %>%
     filter(
-      hms(Gsort()$Time)>=hms("23H 0M 0S"),
-      hms(Gsort()$Time)<=hms("24H 0M 0S")
+      hms(Gsort()$Time)>=hms(l$start[3]),
+      hms(Gsort()$Time)<=hms(l$end[3])
     )
 })
