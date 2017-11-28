@@ -1,0 +1,5 @@
+Shift   -  start       - end
+Shift 1 - "7H 0M 0S"   - "15H 0M 0S"
+Shift 2 - "15H 0M 0S"  - "23H 0M 0S"
+Shift 3 - "20H 0M 0S"  - "24H 0M 0S"
+

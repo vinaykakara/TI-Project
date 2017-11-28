@@ -1,0 +1,14 @@
+Component      -  Value
+GuidePlate A1  -  23.390 
+GuidePlate A2  -  23.416
+GuidePlate B1  -  23.417
+GuidePlate B2  -  23.442
+GuidePlate C1  -  23.443
+GuidePlate C2  -  23.470
+PAWL A1        -  23.358
+PAWL A2        -  23.383
+PAWL B1        -  23.384
+PAWL B2        -  23.409
+PAWl C1        -  23.41
+PAWl C2        -  23.433
+
