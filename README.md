@@ -26,7 +26,8 @@ Now you should be able to run R by typing
 ```
 R
 ```
-If you also chose the weakest machine type like I did, many packages won’t be able to install because of not enough memory. We need to add 1G of swap space:
+Now quit R by typing quit() or open new terminal
+If you chose the weakest machine type, many packages won’t be able to install because of not enough memory. We need to add 1G of swap space:
 ```
 sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
 sudo /sbin/mkswap /var/swap.1
@@ -48,5 +49,10 @@ sudo gdebi rstudio-1.0.44-amd64.deb
 rm rstudio-1.0.44-amd64.deb
 ```
 # Install R packages
-
+Open terminal and type the following commands
+Some packages are available in github so install devtools to install packages from Githu
+```
+sudo su - -c "R -e \"install.packages('devtools', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"devtools::install_github('daattali/shinyjs')\""
+```
 Open Rstudio and type the following commands in terminal
