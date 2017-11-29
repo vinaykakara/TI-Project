@@ -105,5 +105,19 @@ Now install Rstudio-server by typing in terminal
 wget https://download2.rstudio.org/rstudio-server-1.1.383-amd64.deb
 sudo gdebi rstudio-server-1.1.383-amd64.deb
 ```
-By default Rstudio server uses port number 8787,so to acsess Rstudio type 127.0.0.1:8787 or networkip:8787.
+By default Rstudio server uses port number 8787,so to acsess Rstudio type  http://127.0.0.1:8787/  or networkip:8787.
 Network ip can be known by typing Hostname -I in terminal.
+# Install Shiny-server
+First install shiny package
+```
+sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')\""
+```
+To install shiny-server type
+```
+wget https://download3.rstudio.org/ubuntu-12.04/x86_64/shiny-server-1.5.5.872-amd64.deb
+sudo gdebi shiny-server-1.5.5.872-amd64.deb
+```
+By default Shiny server uses port number 3838,so to acsess Shiny server type  http://127.0.0.1:3838/  or networkip:3838.
+Network ip can be known by typing Hostname -I in terminal.
+
+By diffault shiny apps are under folder /opt/shiny-server/samples/sample-apps in ubuntu. U can copy your app folder inside the sample-apps and you can acssess using http://172.17.15.13:3838/sample-apps/ . Replace 172.17.15.13 with your network-ip.
