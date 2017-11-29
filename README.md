@@ -91,3 +91,19 @@ Install package in RStudio: Open Rstudio and type
 ```
 install.packages("rJava")
 ```
+If you have any problems in installing java and configuring see
+https://poweruphosting.com/blog/install-java-ubuntu/
+https://www.digitalocean.com/community/tutorials/how-to-install-java-on-ubuntu-with-apt-get
+
+# Installing Rstudio server
+Lets install some pre-requisites
+```
+sudo apt-get -y install libapparmor1 gdebi-core
+```
+Now install Rstudio-server by typing in terminal
+```
+wget https://download2.rstudio.org/rstudio-server-1.1.383-amd64.deb
+sudo gdebi rstudio-server-1.1.383-amd64.deb
+```
+By default Rstudio server uses port number 8787,so to acsess Rstudio type 127.0.0.1:8787 or networkip:8787.
+Network ip can be known by typing Hostname -I in terminal.
