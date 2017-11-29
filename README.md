@@ -6,7 +6,7 @@ In this tutorial we will discuss about how to install **R,Rstudio,Shiny server**
 
 Ihis tutorial is based upon 64 bit ubuntu system. 
 
-To install R
+# Install R
 ```
 sudo appt-get install R
 ```
