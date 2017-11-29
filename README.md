@@ -26,6 +26,19 @@ Now you should be able to run R by typing
 ```
 R
 ```
+If you also chose the weakest machine type like I did, many packages won’t be able to install because of not enough memory. We need to add 1G of swap space:
+```
+sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
+sudo /sbin/mkswap /var/swap.1
+sudo /sbin/swapon /var/swap.1
+sudo sh -c 'echo "/var/swap.1 swap swap defaults 0 0 " >> /etc/fstab'
+```
+Lets install some dependencies to run R
+```
+sudo apt-get -y install libcurl4-gnutls-dev
+sudo apt-get -y install libxml2-dev
+sudo apt-get -y install libssl-dev
+```
 # Install Rstudio
 Go back to terminal and type the following:
 ```
@@ -34,3 +47,6 @@ wget https://download1.rstudio.org/rstudio-1.0.44-amd64.deb
 sudo gdebi rstudio-1.0.44-amd64.deb
 rm rstudio-1.0.44-amd64.deb
 ```
+# Install R packages
+
+Open Rstudio and type the following commands in terminal
