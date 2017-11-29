@@ -50,9 +50,12 @@ rm rstudio-1.0.44-amd64.deb
 ```
 # Install R packages
 Open terminal and type the following commands
-Some packages are available in github so install devtools to install packages from Githu
+Some packages are available in github so install devtools to install packages from Github
 ```
 sudo su - -c "R -e \"install.packages('devtools', repos='http://cran.rstudio.com/')\""
 sudo su - -c "R -e \"devtools::install_github('daattali/shinyjs')\""
 ```
 Open Rstudio and type the following commands in terminal
+```
+install.packages(c("shiny","shinydashboard","ggplot2","plotly","lubridate","shinythemes","reshape","dplyr","tidyr","xts","pool","dplyr","shinyjs","xlsx","readxl","DT","pool","bubbles","shinySignals","plyr"))
+```
