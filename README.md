@@ -21,4 +21,9 @@ Now install R
 sudo apt-get update
 sudo apt-get -y install r-base
 ```
-To install Rstudio
+Now you should be able to run R by typing
+```
+R
+```
+# Install Rstudio
+
