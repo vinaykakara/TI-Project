@@ -50,12 +50,44 @@ rm rstudio-1.0.44-amd64.deb
 ```
 # Install R packages
 Open terminal and type the following commands
+```
+sudo apt-get install openssl
+```
 Some packages are available in github so install devtools to install packages from Github
 ```
 sudo su - -c "R -e \"install.packages('devtools', repos='http://cran.rstudio.com/')\""
 sudo su - -c "R -e \"devtools::install_github('daattali/shinyjs')\""
 ```
+
 Open Rstudio and type the following commands in terminal
 ```
 install.packages(c("shiny","shinydashboard","ggplot2","plotly","lubridate","shinythemes","reshape","dplyr","tidyr","xts","pool","dplyr","shinyjs","xlsx","readxl","DT","pool","bubbles","shinySignals","plyr"))
+```
+Install some packages from github
+```
+devtools::install_github("jcheng5/bubbles")
+```
+If there are any problems install packages see https://www.digitalocean.com/community/tutorials/how-to-install-r-packages-using-devtools-on-ubuntu-16-04
+
+To install rJava package:
+First install Java if it is not present
+```
+sudo apt-get install default-jre
+```
+Then install JDK
+```
+sudo apt-get install default-jdk
+```
+Then assotiate the JDK installed with R
+```
+sudo R CMD javareconf
+```
+Install RJava and Rgdal
+```
+sudo apt-get install r-cran-rjava
+sudo apt-get install libgdal1-dev libproj-dev
+```
+Install package in RStudio: Open Rstudio and type
+```
+install.packages("rJava")
 ```
