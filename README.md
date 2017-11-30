@@ -121,3 +121,5 @@ By default Shiny server uses port number 3838,so to acsess Shiny server type  ht
 Network ip can be known by typing Hostname -I in terminal.
 
 By diffault shiny apps are under folder /opt/shiny-server/samples/sample-apps in ubuntu. U can copy your app folder inside the sample-apps and you can acssess using http://172.17.15.13:3838/sample-apps/ . Replace 172.17.15.13 with your network-ip.
+
+Befor copying the file to the sample-apps make sure that server,ui and global in a single file App.R
