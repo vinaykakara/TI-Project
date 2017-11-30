@@ -5,7 +5,7 @@ library(dplyr)
 library(DT)
 library(pool)
 library(dplyr)
-
+#Used to read the limts
 mydb <- dbPool(
   RMySQL::MySQL(), 
   dbname = "mydb",
@@ -17,7 +17,9 @@ mydb <- dbPool(
 b<-dbReadTable(mydb,"limits")
 poolClose(mydb)
 
+#used to read the shift timings
 l<-read.csv("Shift.txt",sep="-",header = TRUE)
+#used to read the Pawl reading from SQL
 readpawl<-function(){
   invalidateLater(60000,session=NULL)
   mydb <- dbPool(
@@ -31,7 +33,9 @@ readpawl<-function(){
  poolClose(mydb) 
  da<-Sys.Date()
  de<-paste(substr(da,6,7),substr(da,9,10),substr(da,1,4),sep="-")
- ab<-filter(ab,substr(ab$TIME_STAMP,1,10)==de)
+ #To filter present date data for analysis
+ab<-filter(ab,substr(ab$TIME_STAMP,1,10)==de)
+#to change column names 
  names(ab)[names(ab) == 'GRADE_1'] <- 'GD1'
  names(ab)[names(ab) == 'GRADE_2'] <- 'GD2'
  names(ab)[names(ab) == 'TIME_STAMP'] <- 'Date1'
@@ -39,7 +43,7 @@ readpawl<-function(){
  names(ab)[names(ab) == 'WIDTH_2'] <- 'WD2'
   ab
 }
-
+#used to read the Guide reading from SQL
 readguide<-function(){
   invalidateLater(60000,session=NULL)
   mydb <- dbPool(
@@ -52,7 +56,9 @@ readguide<-function(){
   a<-dbReadTable(mydb,"newguide")
   da<-Sys.Date()
   de<-paste(substr(da,6,7),substr(da,9,10),substr(da,1,4),sep="-")
-  a<-filter(a,substr(a$TIME_STAMP,1,10)==de)
+  #To filter present date data for analysis
+ a<-filter(a,substr(a$TIME_STAMP,1,10)==de)
+ #Used to change column names
   names(a)[names(a) == 'GRADE_1'] <- 'GD1'
   names(a)[names(a) == 'GRADE_2'] <- 'GD2'
   names(a)[names(a) == 'TIME_STAMP'] <- 'Date1'
@@ -68,6 +74,7 @@ xy=1;
   Gsort<-reactive({
     a<-readguide()
     for(i in 1:nrow(a)){
+      #Used to convert time format from 12hrs to 24Hrs
       if(substr(a$Date1[i],21,22)=="AM"){
       ti=as.numeric(substr(a$Date1[i],12,13))
       t=substr(a$Date1[i],12,19)
@@ -75,9 +82,10 @@ xy=1;
       if(substr(a$Date1[i],21,22)=="PM"){
         ti=as.numeric(substr(a$Date1[i],12,13))+12
       t=paste(ti,substr(a$Date1[i],14,19),sep="")
-        }
+      }
+      #Used to find the Hour range
       xt=paste(toString(ti),'-',toString(ti+1),sep='')
-      
+      #Used to form combine grading(GD3)
       yt='p'
       xy1=a$GD1[i]
       xy2=a$GD2[i]
@@ -93,8 +101,8 @@ xy=1;
       if((xy1!='NA')&(xy2!='NA'))
         yt=paste(xy1,xy2,sep='')
       
-      
-      ne=data.frame(a[i:i,1:ncol(a)],Hour=xt,GD3=yt,Date=substr(a$Date1[1],1,10),Time=t)
+      #Used to add columns for date,hour,time
+      ne=data.frame(a[i:i,1:ncol(a)],Hour=xt,GD3=yt,Date=substr(a$Date1[i],1,10),Time=t)
       if(ne$GD1[1]=='NA')
         ne$GD1[1]='R'
       if(ne$GD2[1]=='NA')
@@ -115,6 +123,7 @@ xy=1;
   Psort<-reactive({
     ab<-readpawl()
     for(i in 1:nrow(ab)){
+      #Used to convert time format from 12hrs to 24Hrs
       if(substr(ab$Date1[i],21,22)=="AM"){
         ti=as.numeric(substr(ab$Date1[i],12,13))
         t=substr(ab$Date1[i],12,19)
@@ -123,12 +132,16 @@ xy=1;
         ti=as.numeric(substr(ab$Date1[i],12,13))+12
         t=paste(ti,substr(ab$Date1[i],14,19),sep="")
       }
+      #Used to find the Hour range
       xt=paste(toString(ti),'-',toString(ti+1),sep='')
+      #Used to form combine grading(GD3)
       if(ab$GD1[i]=='NA')
         zx='R'
       else
         zx=ab$GD1[i]
-      r1=data.frame(ab[i:i,1:ncol(ab)],GD3=zx,Hour=xt,Date=substr(ab$Date1[1],1,10),Time=t)
+      
+      #Used to add columns for date,hour,time
+      r1=data.frame(ab[i:i,1:ncol(ab)],GD3=zx,Hour=xt,Date=substr(ab$Date1[i],1,10),Time=t)
       
       
       if(i==1)
@@ -138,7 +151,7 @@ xy=1;
       Pawl$ar[i]<-ti
     }
     Pawl<-Pawl[order(Pawl$ar),]
-  
+  Pawl$ar<-NULL
     Pawl$Date1<-NULL
     Pawl
     
