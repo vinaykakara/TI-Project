@@ -13,15 +13,16 @@ library(xlsx)
 library(readxl)
 library(DT)
 library(pool)
-library(dplyr)
 
 shinyServer(function(input,output){
   
-  
+  #Used to create excel file for saving planned production  if it is not present  
   if(!file.exists("data.xlsx")){
     date<-Sys.Date()
     month<-as.numeric(substr(date,6,7))
     year<-as.numeric(substr(date,1,4))
+    
+    #used to find number of days in a month
     if(month%%2!=0)
       end<-30
     if((month%%2==0)&&(month!=2))
@@ -32,6 +33,8 @@ shinyServer(function(input,output){
       if(year%%4!=0)
         end<-28
     }
+    
+    #used to create the planned production data for that particular month
     for(i in 1:end){
       if(i<10)
         da=paste(substr(date,1,8),0,i,sep = "")
@@ -45,18 +48,19 @@ shinyServer(function(input,output){
         a<-rbind(a,dw)
       }
     }
-  
+  #Used to save the created planned production data in excel file
     write.xlsx(a,"data.xlsx",col.names = TRUE,row.names = FALSE)
   }
   
-  
+  #Used to append the new month planned data to the last month planned data
   if(file.exists("data.xlsx")){
-    
+    #used to read the last month planned data
     a<-read.xlsx("data.xlsx",sheetIndex = 1)
     a$NA.<-NULL
     date<-Sys.Date()
     month<-as.numeric(substr(date,6,7))
     year<-as.numeric(substr(date,1,4))
+    #used to find number of days in that month
     if(month%%2!=0)
       end<-30
     if((month%%2==0)&&(month!=2))
@@ -67,6 +71,8 @@ shinyServer(function(input,output){
       if(year%%4!=0)
         end<-28
     }
+    
+    #used to create the planned production data for that particular month
     for(i in 1:end){
       if(i<10)
         da=paste(substr(date,1,8),0,i,sep = "")
@@ -74,17 +80,19 @@ shinyServer(function(input,output){
         da=paste(substr(date,1,8),i,sep = "")
       yz<-0
       for(j in 1:nrow(a))
-        if(de$Date[i]==da)
+        if(a$Date[i]==da)
           yz<-1
         
         if(yz==0){
           dw<-data.frame(Date=da,Guide=0,PAWL=0)
+          #Used to append the present month planned data to present month
           a<-rbind(a,dw)
           }
     }
+    #used to save the planned data in excel file
     write.xlsx(a,"data.xlsx")
   }
-  
+  #To read SQL table 
   mydb <- dbPool(
     RMySQL::MySQL(), 
     dbname = "mydb",
@@ -95,20 +103,38 @@ shinyServer(function(input,output){
   Gsort<-dbReadTable(mydb,"newguide") 
   Psort<-dbReadTable(mydb,"newpawl")
   poolClose(mydb)
+  #Used to change the column names of the SQL tale
+  names(Gsort)[names(Gsort) == 'TIME.STAMP'] <- 'TIME_STAMP'
+  names(Psort)[names(Psort) == 'TIME.STAMP'] <- 'TIME_STAMP'
+  names(Gsort)[names(Gsort) == 'GRADE.1'] <- 'GRADE_1'
+  names(Psort)[names(Psort) == 'GRADE.1'] <- 'GRADE_1'
+  names(Gsort)[names(Gsort) == 'GRADE.2'] <- 'GRADE_2'
+  names(Psort)[names(Psort) == 'GRADE.2'] <- 'GRADE_2'
+  
+  names(Gsort)[names(Gsort) == 'TIME STAMP'] <- 'TIME_STAMP'
+  names(Psort)[names(Psort) == 'TIME STAMP'] <- 'TIME_STAMP'
+  names(Gsort)[names(Gsort) == 'GRADE 1'] <- 'GRADE_1'
+  names(Psort)[names(Psort) == 'GRADE 1'] <- 'GRADE_1'
+  names(Gsort)[names(Gsort) == 'GRADE 2'] <- 'GRADE_2'
+  names(Psort)[names(Psort) == 'GRADE 2'] <- 'GRADE_2'
+  
+  #Used to filter the data of the particular month
   Gsort<-filter(Gsort,substr(Gsort$TIME_STAMP,7,10)==toString(substr(Sys.Date(),1,4)))
   Gsort<-filter(Gsort,substr(Gsort$TIME_STAMP,1,2)==toString(substr(Sys.Date(),6,7)))
   
   Psort<-filter(Psort,substr(Psort$TIME_STAMP,7,10)==toString(substr(Sys.Date(),1,4)))
   Psort<-filter(Psort,substr(Psort$TIME_STAMP,1,2)==toString(substr(Sys.Date(),6,7)))
-  Gsort$Date=NULL
+  
+  
   for(i in 1:nrow(Gsort)){
     
-   
+   #used to Create a column of date
      Gsort$Date[i]<-substr(Gsort$TIME_STAMP[i],1,10)
     na<-Gsort$Date[i]
     Gsort$Date[i]<-paste(substr(na,7,10),substr(na,1,2),substr(na,4,5),sep = "-")
-    g1<-(Gsort$Grade_1[i])
-    g2<-(Gsort$Grade_2[i])
+    #Used to create a column(GD3) for combining both grades
+    g1<-(Gsort$GRADE_1[i])
+    g2<-(Gsort$GRADE_2[i])
     if((g1=="NA")&&(g2=="NA"))
       Gsort$GD3[i]<-"R"
     else if((g1!="NA")||(g2!="NA")){
@@ -123,16 +149,17 @@ shinyServer(function(input,output){
   }
   
   for(i in 1:nrow(Psort)){
+    #Used to create a column for date
     Psort$Date[i]<-substr(Psort$TIME_STAMP[i],1,10)
     na<-Psort$Date[i]
     Psort$Date[i]<-paste(substr(na,7,10),substr(na,1,2),substr(na,4,5),sep = "-")
-    if(Psort$Grade_1[i]=="NA")
+    if(Psort$GRADE_1[i]=="NA")
       Psort$GD3[i]<-"R"
     else
-      Psort$GD3[i]<-Psort$Grade_1[i]
+      Psort$GD3[i]<-Psort$GRADE_1[i]
   }
  
-  
+  #Used to count number of grades 
   guidep=0
   pawlp=0
   totalp=0
@@ -161,6 +188,7 @@ shinyServer(function(input,output){
     }
      
   }
+  
   output$table2 <- renderDataTable({
     Parts <- as.numeric(c(guidep,pawlp,totalp))
     Rej <- as.numeric(c(guider,pawlr,totalr))
