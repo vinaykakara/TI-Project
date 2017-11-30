@@ -10,7 +10,7 @@ library(tidyr)
 library(xts)
 library(pool)
 library(dplyr)
-
+#used to read data from sql table
 shinyServer(function(input,output){
   mydb <- dbPool(
     RMySQL::MySQL(), 
@@ -22,7 +22,7 @@ shinyServer(function(input,output){
   Psort<-dbReadTable(mydb,"newpawl")
   Gsort<-dbReadTable(mydb,"newguide")
   poolClose(mydb) 
-  
+  #used to change column names of a table
   names(Gsort)[names(Gsort) == 'GRADE_1'] <- 'GD1'
   names(Gsort)[names(Gsort) == 'GRADE_2'] <- 'GD2'
   names(Gsort)[names(Gsort) == 'TIME_STAMP'] <- 'Date'
@@ -35,7 +35,7 @@ shinyServer(function(input,output){
   names(Psort)[names(Psort) == 'WIDTH_1'] <- 'WD1'
   names(Psort)[names(Psort) == 'WIDTH_2'] <- 'WD2'
   
-  
+  #used to count the grades
   ggd1a = 0;
   ggd1b = 0;
   ggd1c = 0;
@@ -59,7 +59,7 @@ shinyServer(function(input,output){
   pgd3c = 0;
   pgd3r = 0;
   for(i in 1:nrow(Gsort)){
-    
+    #used to convert the date formant
     da<-Gsort$Date[i]
     if(substr(da,21,22)=="AM")
       Gsort$Time[i]=substr(da,12,19)
@@ -67,6 +67,7 @@ shinyServer(function(input,output){
       Gsort$Time[i]=paste(12+as.numeric(substr(da,12,13)),substr(da,14,19),sep="")
     
     Gsort$Date[i]<-paste(substr(da,7,10),substr(da,1,2),substr(da,4,5),sep="-")
+    #used to add the combined grade
     yt='p'
     xy1=Gsort$GD1[i]
     xy2=Gsort$GD2[i]
@@ -133,6 +134,7 @@ shinyServer(function(input,output){
   }
   
   for(i in 1:nrow(Psort)){
+    #used to convert date format
     da<-Psort$Date[i]
     if(substr(da,21,22)=="AM")
       Psort$Time[i]=substr(da,12,19)
@@ -142,7 +144,7 @@ shinyServer(function(input,output){
     if(Psort$GD1[i]=='NA')
       Psort$GD1[i]='R'
     Psort$GD3[i]=Psort$GD1[i]
-    
+    #used to count number of grades
     if(Psort$GD3[i]=='A')
       pgd3a=pgd3a+1;
     if(Psort$GD3[i]=='B')
@@ -154,6 +156,7 @@ shinyServer(function(input,output){
     
   }
   Total<-rbind(Gsort,Psort)
+  
   output$text1<- renderUI({
     startdate =min(Gsort$Date)
   })
