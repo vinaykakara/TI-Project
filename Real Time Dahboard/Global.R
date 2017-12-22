@@ -1,68 +1,97 @@
+#Attaching Libraries
+library(shiny)
+library(shinydashboard)
+library(ggplot2)
+library(plotly)
+library(lubridate)
+library(shinythemes)
+library(reshape)
+library(dplyr)
+library(tidyr)
+library(xts)
+library(bubbles)
+library(shinySignals)
 library(xlsx)
 library(plyr)
 library(pool)
 library(dplyr)
 library(DT)
 library(pool)
-library(dplyr)
+
+
+#ip address of sql server
+ip<-"127.0.0.1"
+#database name
+database="mydb"
+#username of sql table
+username="tiproject"
+#password of sql table
+password="tiproject"
+
+#time for the dashboard to refresh
+#NOTE: time is in milliseconds
+timeforrefresh=120000
 #Used to read the limts
-mydb <- dbPool(
-  RMySQL::MySQL(), 
-  dbname = "mydb",
-  host = "127.0.0.1",
-  username = "tiproject",
-  password = "tiproject"
-)
-
-b<-dbReadTable(mydb,"limits")
-poolClose(mydb)
-
+if(file.exists("Guide and PAWL.txt"))
+b<-read.csv("Guide and PAWL.txt",sep="-",header = TRUE)
 #used to read the shift timings
+if(file.exists("Shift.txt"))
 l<-read.csv("Shift.txt",sep="-",header = TRUE)
+
 #used to read the Pawl reading from SQL
 readpawl<-function(){
-  invalidateLater(60000,session=NULL)
+  invalidateLater(timeforrefresh,session=NULL)
   mydb <- dbPool(
     RMySQL::MySQL(), 
-    dbname = "mydb",
-    host = "127.0.0.1",
-    username = "tiproject",
-    password = "tiproject"
+    dbname = database,
+    host = ip,
+    username = username,
+    password = password
   )
-   ab<-dbReadTable(mydb,"newpawl")
- poolClose(mydb) 
- da<-Sys.Date()
- de<-paste(substr(da,6,7),substr(da,9,10),substr(da,1,4),sep="-")
- #To filter present date data for analysis
-ab<-filter(ab,substr(ab$TIME_STAMP,1,10)==de)
-#to change column names 
- names(ab)[names(ab) == 'GRADE_1'] <- 'GD1'
- names(ab)[names(ab) == 'GRADE_2'] <- 'GD2'
- names(ab)[names(ab) == 'TIME_STAMP'] <- 'Date1'
- names(ab)[names(ab) == 'WIDTH_1'] <- 'WD1'
- names(ab)[names(ab) == 'WIDTH_2'] <- 'WD2'
+  ab<-dbReadTable(mydb,"newpawl")
+  poolClose(mydb) 
+  da<-Sys.Date()
+  de<-paste(substr(da,6,7),substr(da,9,10),substr(da,1,4),sep="-")
+  #To filter present date data for analysis
+  ab<-filter(ab,substr(ab$TIME_STAMP,1,10)==de)
+  #to change column names 
+  #Grade 1 for Pawl
+  names(ab)[names(ab) == 'GRADE_1'] <- 'GD1'
+  #Grade 2 for Pawl
+  names(ab)[names(ab) == 'GRADE_2'] <- 'GD2'
+  #Time stamp column name 
+  names(ab)[names(ab) == 'TIME_STAMP'] <- 'Date1'
+  #Width 1 for Pawl
+  names(ab)[names(ab) == 'WIDTH_1'] <- 'WD1'
+  #width 2 for pawl
+  names(ab)[names(ab) == 'WIDTH_2'] <- 'WD2'
   ab
 }
 #used to read the Guide reading from SQL
 readguide<-function(){
-  invalidateLater(60000,session=NULL)
+  invalidateLater(timeforrefresh,session=NULL)
   mydb <- dbPool(
     RMySQL::MySQL(), 
-    dbname = "mydb",
-    host = "127.0.0.1",
-    username = "tiproject",
-    password = "tiproject"
+    dbname = database,
+    host = ip,
+    username = username,
+    password = password
   )
   a<-dbReadTable(mydb,"newguide")
   da<-Sys.Date()
   de<-paste(substr(da,6,7),substr(da,9,10),substr(da,1,4),sep="-")
   #To filter present date data for analysis
- a<-filter(a,substr(a$TIME_STAMP,1,10)==de)
- #Used to change column names
+  a<-filter(a,substr(a$TIME_STAMP,1,10)==de)
+  #Used to change column names
+  #Grade 1 for Guide plate
   names(a)[names(a) == 'GRADE_1'] <- 'GD1'
+  #Grade 2 for Guide plate
   names(a)[names(a) == 'GRADE_2'] <- 'GD2'
+  #Time stamp column name
   names(a)[names(a) == 'TIME_STAMP'] <- 'Date1'
+  #width 1 for Guide plate
   names(a)[names(a) == 'WIDTH_1'] <- 'WD1'
+  #width 2 for Guide plate 
   names(a)[names(a) == 'WIDTH_2'] <- 'WD2'
   
   poolClose(mydb)
@@ -71,98 +100,109 @@ readguide<-function(){
 
 xy=1;
 
-  Gsort<-reactive({
-    a<-readguide()
-    for(i in 1:nrow(a)){
-      #Used to convert time format from 12hrs to 24Hrs
-      if(substr(a$Date1[i],21,22)=="AM"){
+Gsort<-reactive({
+  a<-readguide()
+  for(i in 1:nrow(a)){
+    #Used to convert time format from 12hrs to 24Hrs
+    if(substr(a$Date1[i],21,22)=="AM"){
       ti=as.numeric(substr(a$Date1[i],12,13))
       t=substr(a$Date1[i],12,19)
-      }
-      if(substr(a$Date1[i],21,22)=="PM"){
-        ti=as.numeric(substr(a$Date1[i],12,13))+12
+    }
+    if(substr(a$Date1[i],21,22)=="PM"){
+      ti=as.numeric(substr(a$Date1[i],12,13))+12
       t=paste(ti,substr(a$Date1[i],14,19),sep="")
-      }
-      #Used to find the Hour range
+    }
+    #Used to find the Hour range
+    if(ti<9)
+      xt=paste(0,toString(ti),'-',0,toString(ti+1),sep='')
+    if(ti==9)
+      xt=paste(0,toString(ti),'-',toString(ti+1),sep='')
+    if(ti>9)
       xt=paste(toString(ti),'-',toString(ti+1),sep='')
-      #Used to form combine grading(GD3)
-      yt='p'
-      xy1=a$GD1[i]
-      xy2=a$GD2[i]
-      if((xy1=='NA')&(xy2=='NA'))
-        yt='R'
-      
-      if((xy1=='NA')&(xy2!='NA'))
-        yt=paste(xy2,'R',sep='')
-      
-      if((xy1!='NA')&(xy2=='NA'))
-        yt=paste(xy1,'R',sep='')
-      
-      if((xy1!='NA')&(xy2!='NA'))
-        yt=paste(xy1,xy2,sep='')
-      
-      #Used to add columns for date,hour,time
-      ne=data.frame(a[i:i,1:ncol(a)],Hour=xt,GD3=yt,Date=substr(a$Date1[i],1,10),Time=t)
-      if(ne$GD1[1]=='NA')
-        ne$GD1[1]='R'
-      if(ne$GD2[1]=='NA')
-        ne$GD2[1]='R'
+    #Used to form combine grading(GD3)
+    yt='p'
+    xy1=a$GD1[i]
+    xy2=a$GD2[i]
+    if((xy1=='NA')&(xy2=='NA'))
+      yt='R'
+    
+    if((xy1=='NA')&(xy2!='NA'))
+      yt=paste(xy2,'R',sep='')
+    
+    if((xy1!='NA')&(xy2=='NA'))
+      yt=paste(xy1,'R',sep='')
+    
+    if((xy1!='NA')&(xy2!='NA'))
+      yt=paste(xy1,xy2,sep='')
+    
+    #Used to add columns for date,hour,time
+    ne=data.frame(a[i:i,1:ncol(a)],Hour=xt,GD3=yt,Date=substr(a$Date1[i],1,10),Time=t,h=ti)
+    if(ne$GD1[1]=='NA')
+      ne$GD1[1]='R'
+    if(ne$GD2[1]=='NA')
+      ne$GD2[1]='R'
+    
+    if(i==1){
+      Guide<-ne
+    }
+    else{
+      Guide<-rbind.fill(Guide,ne)
+      Guide$ar[i]<-ti
+      }
+  }
+  # Guide<- Guide[with(Guide, order(Guide$h)), ]
+  Guide$Hour <- factor(Guide$Hour, levels = unique(Guide$Hour[order(Guide$ar)]))
+  Guide
+})
 
-      if(i==1){
-        Guide<-ne
-      }
-      else{
-        Guide<-rbind.fill(Guide,ne)}
+
+Psort<-reactive({
+  ab<-readpawl()
+  for(i in 1:nrow(ab)){
+    #Used to convert time format from 12hrs to 24Hrs
+    if(substr(ab$Date1[i],21,22)=="AM"){
+      ti=as.numeric(substr(ab$Date1[i],12,13))
+      t=substr(ab$Date1[i],12,19)
     }
-    Guide$Date1<-NULL
-    
-    Guide
-  })
-  
-  
-  Psort<-reactive({
-    ab<-readpawl()
-    for(i in 1:nrow(ab)){
-      #Used to convert time format from 12hrs to 24Hrs
-      if(substr(ab$Date1[i],21,22)=="AM"){
-        ti=as.numeric(substr(ab$Date1[i],12,13))
-        t=substr(ab$Date1[i],12,19)
-      }
-      if(substr(ab$Date1[i],21,22)=="PM"){
-        ti=as.numeric(substr(ab$Date1[i],12,13))+12
-        t=paste(ti,substr(ab$Date1[i],14,19),sep="")
-      }
-      #Used to find the Hour range
+    if(substr(ab$Date1[i],21,22)=="PM"){
+      ti=as.numeric(substr(ab$Date1[i],12,13))+12
+      t=paste(ti,substr(ab$Date1[i],14,19),sep="")
+    }
+    #Used to find the Hour range
+    if(ti<9)
+      xt=paste(0,toString(ti),'-',0,toString(ti+1),sep='')
+    if(ti==9)
+      xt=paste(0,toString(ti),'-',toString(ti+1),sep='')
+    if(ti>9)
       xt=paste(toString(ti),'-',toString(ti+1),sep='')
-      #Used to form combine grading(GD3)
-      if(ab$GD1[i]=='NA')
-        zx='R'
-      else
-        zx=ab$GD1[i]
-      
-      #Used to add columns for date,hour,time
-      r1=data.frame(ab[i:i,1:ncol(ab)],GD3=zx,Hour=xt,Date=substr(ab$Date1[i],1,10),Time=t)
-      
-      
-      if(i==1)
-        Pawl<-r1
-      if(i>1)
-        Pawl<-rbind.fill(Pawl,r1)
-      Pawl$ar[i]<-ti
-    }
-    Pawl<-Pawl[order(Pawl$ar),]
-  Pawl$ar<-NULL
-    Pawl$Date1<-NULL
-    Pawl
+    #Used to form combine grading(GD3)
+    if(ab$GD1[i]=='NA')
+      zx='R'
+    else
+      zx=ab$GD1[i]
     
-  })
+    #Used to add columns for date,hour,time
+    r1=data.frame(ab[i:i,1:ncol(ab)],Hour=xt,GD3=zx,Date=substr(ab$Date1[i],1,10),Time=t)
+    
+    
+    if(i==1)
+      Pawl<-r1
+    if(i>1)
+      Pawl<-rbind.fill(Pawl,r1)
+    Pawl$ar[i]<-ti
+  }
+  Pawl$Date1<-NULL
+  Pawl$Hour <- factor(Pawl$Hour, levels = unique(Pawl$Hour[order(Pawl$ar)]))
+  Pawl
   
-  
+})
+
+
 
 Total<-reactive({
   rbind.fill(Gsort(),Psort())
 })
-
+# to count number of parts
 ggd3aa<-reactive({
   cou=0
   for(i in 1:nrow(Gsort())){
@@ -408,9 +448,9 @@ totalp<-reactive({
   cou
 })
 
-
+# to divide based on shift timings
 subdata <- reactive({
- 
+  
   Gsort() %>%
     filter(
       hms(Gsort()$Time)>=hms(l$start[1]),
@@ -418,7 +458,7 @@ subdata <- reactive({
     )
 })
 subdata1 <- reactive({
-
+  
   Gsort() %>%
     filter(
       hms(Gsort()$Time)>=hms(l$start[2]),
@@ -426,7 +466,7 @@ subdata1 <- reactive({
     )
 })
 subdata2 <- reactive({
- 
+  
   Gsort() %>%
     filter(
       hms(Gsort()$Time)>=hms(l$start[3]),
