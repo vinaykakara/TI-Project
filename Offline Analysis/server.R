@@ -1,3 +1,4 @@
+#To attach the required libraries
 library(shiny)
 library(shinydashboard)
 library(ggplot2)
@@ -9,30 +10,50 @@ library(dplyr)
 library(tidyr)
 library(xts)
 library(pool)
-library(dplyr)
+#ip address of sql server
+ip<-"172.16.19.182"
+#database name
+database="mydb"
+#username of sql table
+username="tiproject"
+#password of sql table
+password="tiproject"
+
+
+
 #used to read data from sql table
 shinyServer(function(input,output){
   mydb <- dbPool(
     RMySQL::MySQL(), 
-    dbname = "mydb",
-    host = "127.0.0.1",
-    username = "tiproject",
-    password = "tiproject"
+    dbname = database,
+    host = ip,
+    username = username,
+    password = password
   )
   Psort<-dbReadTable(mydb,"newpawl")
   Gsort<-dbReadTable(mydb,"newguide")
   poolClose(mydb) 
   #used to change column names of a table
+  #Grade 1 for guide plate
   names(Gsort)[names(Gsort) == 'GRADE_1'] <- 'GD1'
+  #Grade 2 for guide plate
   names(Gsort)[names(Gsort) == 'GRADE_2'] <- 'GD2'
+  #column name for date
   names(Gsort)[names(Gsort) == 'TIME_STAMP'] <- 'Date'
+  #width 1 for guide plate
   names(Gsort)[names(Gsort) == 'WIDTH_1'] <- 'WD1'
+  #width 2 for guide plate
   names(Gsort)[names(Gsort) == 'WIDTH_2'] <- 'WD2'
   
+  #Grade 1 for pawl
   names(Psort)[names(Psort) == 'GRADE_1'] <- 'GD1'
+  #grade 2 for pawl
   names(Psort)[names(Psort) == 'GRADE_2'] <- 'GD2'
+  #column name for pawl
   names(Psort)[names(Psort) == 'TIME_STAMP'] <- 'Date'
+  #width 1 for pawl
   names(Psort)[names(Psort) == 'WIDTH_1'] <- 'WD1'
+  #width 2 for pawl
   names(Psort)[names(Psort) == 'WIDTH_2'] <- 'WD2'
   
   #used to count the grades
@@ -157,70 +178,101 @@ shinyServer(function(input,output){
   }
   Total<-rbind(Gsort,Psort)
   
+  #To display minimum date in Guide Plate
   output$text1<- renderUI({
     startdate =min(Gsort$Date)
   })
+  #To display maximum date in Guide Plate
   output$text2<- renderUI({
     enddate   =max(Gsort$Date)
   })
+  #To display minimum date in PAWL
   output$text3<- renderUI({
     startdate =min(Psort$Date)
   })
+  #To display maximum date in PAWL
   output$text4<- renderUI({
     enddate   =max(Psort$Date)
   })
+  #To display minimum date in Guide Plate
+  output$text5<- renderUI({
+    startdate =min(Gsort$Date)
+  })
+  #To display maximum date in Guide Plate
+  output$text6<- renderUI({
+    enddate   =max(Gsort$Date)
+  })
+  #To display minimum date in PAWL
+  output$text7<- renderUI({
+    startdate =min(Psort$Date)
+  })
+  #To display maximum date in PAWL
+  output$text8<- renderUI({
+    enddate   =max(Psort$Date)
+  })
+  #To filter data to a particular date range (One day)
   subdata1 <- reactive({
     Gsort %>%
       filter(
-        as.Date(Gsort$Date)>= as.Date(Gsort$Date[1]),
-        as.Date(Gsort$Date)<= as.Date(Gsort$Date[1])
+        as.Date(Gsort$Date)>= as.Date(max(Gsort$Date)),
+        as.Date(Gsort$Date)<= as.Date(max(Gsort$Date))
       )
   })
+  #One week from recent date
   subdata2 <- reactive({
     Gsort %>%
       filter(
-        as.Date(Gsort$Date)>= as.Date(Gsort$Date[1]),
-        as.Date(Gsort$Date)<= as.Date(Gsort$Date[1])+7
+        as.Date(Gsort$Date)>= as.Date(max(Gsort$Date))-7,
+        as.Date(Gsort$Date)<= as.Date(max(Gsort$Date))
       )
   })
+  #One month from recent date
   subdata3 <- reactive({
     Gsort %>%
       filter(
-        as.Date(Gsort$Date)>= as.Date(Gsort$Date[1]),
-        as.Date(Gsort$Date)<= as.Date(Gsort$Date[1])+30
+        as.Date(Gsort$Date)>= as.Date(max(Gsort$Date))-30,
+        as.Date(Gsort$Date)<= as.Date(max(Gsort$Date))
       )
   })
+  #To plot Guide Plate data 
   output$Barchart <- renderPlotly({
     xyz <- data.frame(
+      #To combine to grades as one
       Date <- c(Gsort$Date,Gsort$Date),
       Grade <- c(Gsort$GD1,Gsort$GD2)
     )
+    #Datewise data as stack
     x<- ggplotly(
       ggplot(xyz, mapping= aes(Date,fill=Grade))+
         geom_bar(position = "stack")+theme(axis.text.x = element_text(angle = 45, size = 8))
     )
+    #Datewise data as dodge
     if(input$radio=="2"){
       x<- ggplotly(
         ggplot(xyz, mapping= aes(Date,fill=Grade))+
           geom_bar(position = "dodge")+theme(axis.text.x = element_text(angle = 45, size = 8))
       )
     }
+    #Daywise data as stack
     if(input$radio=="3"){
       x<- ggplotly(
         ggplot(xyz, mapping= aes(wday(Date,label = T),fill=Grade))+
           geom_bar(position = "stack")+xlab("Day")
       )
     }
+    #Daywise data as dodge
     if(input$radio=="4"){
       x<- ggplotly(
         ggplot(xyz, mapping= aes(wday(Date,label = T),fill=Grade))+
           geom_bar(position = "dodge")+xlab("Day")
       ) 
     }
+    #For differnt radio buttons
     if(input$radio1=="2"){
+      #To combine GD1 and GD2
       abc <- data.frame(
-       Date <- c(subdata1()$Date,subdata1()$Date),
-       Grade <- c(subdata1()$GD1,subdata1()$GD2)
+        Date <- c(subdata1()$Date,subdata1()$Date),
+        Grade <- c(subdata1()$GD1,subdata1()$GD2)
       )
       x<- ggplotly(
         ggplot(abc, mapping= aes(Date,fill=Grade))+
@@ -304,50 +356,59 @@ shinyServer(function(input,output){
     x$elementId <- NULL
     x
   })
+  #One day data starting from recent data - PAWL
   subdata4 <- reactive({
     Psort %>%
       filter(
-        as.Date(Psort$Date)>= as.Date(Psort$Date[1]),
-        as.Date(Psort$Date)<= as.Date(Psort$Date[1])
+        as.Date(Psort$Date)>= as.Date(max(Psort$Date)),
+        as.Date(Psort$Date)<= as.Date(max(Psort$Date))
       )
   })
+  #One week data from recent date - PAWL
   subdata5 <- reactive({
     Psort %>%
       filter(
-        as.Date(Psort$Date)>= as.Date(Psort$Date[1]),
-        as.Date(Psort$Date)<= as.Date(Psort$Date[1])+7
+        as.Date(Psort$Date)>= as.Date(max(Psort$Date))-7,
+        as.Date(Psort$Date)<= as.Date(max(Psort$Date))
       )
   })
+  #One month data from recent date - PAWL
   subdata6 <- reactive({
     Psort %>%
       filter(
-        as.Date(Psort$Date)>= as.Date(Psort$Date[1]),
-        as.Date(Psort$Date)<= as.Date(Psort$Date[1])+30
+        as.Date(Psort$Date)>= as.Date(max(Psort$Date))-30,
+        as.Date(Psort$Date)<= as.Date(max(Psort$Date))
       )
   })
+  #Plotting PAWL Data
   output$Barchart1 <- renderPlotly({
+    #PAWL data datewise stack
     x<- ggplotly(
       ggplot(Psort, mapping= aes(Date,fill=GD3))+
         geom_bar(position = "stack")+theme(axis.text.x = element_text(angle = 45, size = 8))
     )
+    #PAWL data datewise dodge
     if(input$p1=="2"){
       x<- ggplotly(
         ggplot(Psort, mapping= aes(Date,fill=GD3))+
           geom_bar(position = "dodge")+theme(axis.text.x = element_text(angle = 45, size = 8))
       )
     }
+    #PAWL data daywise stack
     if(input$p1=="3"){
       x<- ggplotly(
         ggplot(Psort, mapping= aes(wday(Date,label = T),fill=GD3))+
           geom_bar(position = "stack")+xlab("Day")
       )
     }
+    #PAWL data daywise Dodge
     if(input$p1=="4"){
       x<- ggplotly(
         ggplot(Psort, mapping= aes(wday(Date,label = T),fill=GD3))+
           geom_bar(position = "dodge")+xlab("Day")
       ) 
     }
+    #For different radio buttons
     if(input$p2=="2"){
       x<- ggplotly(
         ggplot(subdata4(), mapping= aes(Date,fill=GD3))+
@@ -420,26 +481,32 @@ shinyServer(function(input,output){
         ) 
       }
     }
+    #To remove unwanted warnings
     x$elementId <- NULL
     x
   })
+  #Plotting Guide Plate leftside grade 
   output$Barchart2 <- renderPlotly({
+    #Datewise Stack
     x<- ggplotly(
       ggplot(Gsort, mapping= aes(Date,fill=GD1))+
         geom_bar(position = "stack")+theme(axis.text.x = element_text(angle = 45, size = 8))
     )
+    #Datewise Dodge
     if(input$x1=="2"){
       x<- ggplotly(
         ggplot(Gsort, mapping= aes(Date,fill=GD1))+
           geom_bar(position = "dodge")+theme(axis.text.x = element_text(angle = 45, size = 8))
       )
     }
+    #Daywise Stack
     if(input$x1=="3"){
       x<- ggplotly(
         ggplot(Gsort, mapping= aes(wday(Date,label = T),fill=GD1))+
           geom_bar(position = "stack")+xlab("Day")
       )
     }
+    #Daywise Dodge
     if(input$x1=="4"){
       x<- ggplotly(
         ggplot(Gsort, mapping= aes(wday(Date,label = T),fill=GD1))+
@@ -521,24 +588,28 @@ shinyServer(function(input,output){
     x$elementId <- NULL
     x
   })
+  #Guide Plate rightside Grade
   output$Barchart3 <- renderPlotly({
+    #Datewise Stack
     x<- ggplotly(
       ggplot(Gsort, mapping= aes(Date,fill=GD2))+
         geom_bar(position = "stack")+theme(axis.text.x = element_text(angle = 45, size = 8))
     )
+    #Datewise dodge
     if(input$y1=="2"){
       x<- ggplotly(
         ggplot(Gsort, mapping= aes(Date,fill=GD2))+
           geom_bar(position = "dodge")+theme(axis.text.x = element_text(angle = 45, size = 8))
-        
       )
     }
+    #Daywise Stack
     if(input$y1=="3"){
       x<- ggplotly(
         ggplot(Gsort, mapping= aes(wday(Date,label = T),fill=GD2))+
           geom_bar(position = "stack")+xlab("Day")
       )
     }
+    #Daywise dodge
     if(input$y1=="4"){
       x<- ggplotly(
         ggplot(Gsort, mapping= aes(wday(Date,label = T),fill=GD2))+
@@ -620,6 +691,7 @@ shinyServer(function(input,output){
     x$elementId <- NULL
     x
   })
+  #Filtering data by desired date range - GuidePlate
   subdata7 <- reactive({
     Gsort %>%
       filter(
@@ -627,7 +699,8 @@ shinyServer(function(input,output){
         as.Date(Gsort$Date)<= as.Date(input$date_range1[2])
       )
   })
-  subdata8<- reactive({
+  #Filtering data by desired date range (Shift 1) - GuidePlate
+  subdata8 <- reactive({
     Gsort %>%
       filter(
         as.Date(Gsort$Date)>= as.Date(input$date_range1[1]),
@@ -636,6 +709,7 @@ shinyServer(function(input,output){
         hms(Gsort$Time)<=hms("15H 0M 0S")
       )
   })
+  #Filtering data by desired date range (Shift 2) - GuidePlate 
   subdata9 <- reactive({
     Gsort %>%
       filter(
@@ -645,6 +719,7 @@ shinyServer(function(input,output){
         hms(Gsort$Time)<=hms("23H 0M 0S")
       )
   })
+  #Filtering data by desired date range (Shift 3) - GuidePlate
   subdata10 <- reactive({
     Gsort %>%
       filter(
@@ -655,32 +730,38 @@ shinyServer(function(input,output){
       )
   })
   output$plot1<- renderPlotly({
+    #Combining GD1 and GD2 of GuidePlate
     jkl <- data.frame(
       Date <- c(subdata7()$Date,subdata7()$Date),
       Grade <- c(subdata7()$GD1,subdata7()$GD2)
     )
+    #Datewise data stack
     x<- ggplotly(
       ggplot(jkl, mapping= aes(Date,fill=Grade))+
         geom_bar(position = "stack")+theme(axis.text.x = element_text(angle = 45, size = 8))
     )
+    #Datewise data dodge
     if(input$gd=="2"){
       x<- ggplotly(
         ggplot(jkl, mapping= aes(Date,fill=Grade))+
           geom_bar(position = "dodge")+theme(axis.text.x = element_text(angle = 45, size = 8))
       )
     }
+    #Daywise data stack
     if(input$gd=="3"){
       x<- ggplotly(
         ggplot(jkl, mapping= aes(wday(Date,label = T),fill=Grade))+
           geom_bar(position = "stack")+xlab("Day")
       )
     }
+    #Daywise data dodge
     if(input$gd=="4"){
       x<- ggplotly(
         ggplot(jkl, mapping= aes(wday(Date,label = T),fill=Grade))+
           geom_bar(position = "dodge")+xlab("Day")
       ) 
     }
+    #For different radiobuttons
     if(input$gd1=="2"){
       mno <- data.frame(
         Date <- c(subdata8()$Date,subdata8()$Date),
@@ -769,6 +850,7 @@ shinyServer(function(input,output){
     x$elementId <- NULL
     x
   })
+  #Filtering data for desired daterange - PAWL
   subdata11 <- reactive({
     Psort %>%
       filter(
@@ -776,6 +858,7 @@ shinyServer(function(input,output){
         as.Date(Psort$Date)<= as.Date(input$date_range2[2])
       )
   })
+  #Filtering data for desired daterange (Shift-1) - PAWL
   subdata12 <- reactive({
     Psort %>%
       filter(
@@ -785,6 +868,7 @@ shinyServer(function(input,output){
         hms(Psort$Time)<=hms("15H 0M 0S")
       )
   })
+  #Filtering data for desired daterange (Shift-2) - PAWL
   subdata13 <- reactive({
     Psort %>%
       filter(
@@ -794,6 +878,7 @@ shinyServer(function(input,output){
         hms(Psort$Time)<=hms("23H 0M 0S")
       )
   })
+  #Filtering data for desired daterange (Shift-3)- PAWL
   subdata14 <- reactive({
     Psort %>%
       filter(
@@ -803,29 +888,35 @@ shinyServer(function(input,output){
         hms(Psort$Time)<=hms("24H 0M 0S")
       )
   })
+  #To Plot PAWL data
   output$plot2<- renderPlotly({
+    #Datewise data stack
     x<- ggplotly(
       ggplot(subdata11(), mapping= aes(Date,fill=GD3))+
         geom_bar(position = "stack")+theme(axis.text.x = element_text(angle = 45, size = 8))
     )
+    #Datewise data dodge
     if(input$pd=="2"){
       x<- ggplotly(
         ggplot(subdata11(), mapping= aes(Date,fill=GD3))+
           geom_bar(position = "dodge")+theme(axis.text.x = element_text(angle = 45, size = 8))
       )
     }
+    #Daywise data stack
     if(input$pd=="3"){
       x<- ggplotly(
         ggplot(subdata11(), mapping= aes(wday(Date,label = T),fill=GD3))+
           geom_bar(position = "stack")+xlab("Day")
       )
     }
+    #Daywise data dodge
     if(input$pd=="4"){
       x<- ggplotly(
         ggplot(subdata11(), mapping= aes(wday(Date,label = T),fill=GD3))+
           geom_bar(position = "dodge")+xlab("Day")
       ) 
     }
+    #Similarly for various radiobuttons
     if(input$pd1=="2"){
       x<- ggplotly(
         ggplot(subdata12(), mapping= aes(Date,fill=GD3))+
@@ -902,6 +993,7 @@ shinyServer(function(input,output){
     x$elementId <- NULL
     x
   })
+  #To filter data to desired daterange - Guideplate GD1
   subdata15 <- reactive({
     Gsort %>%
       filter(
@@ -909,6 +1001,7 @@ shinyServer(function(input,output){
         as.Date(Gsort$Date)<= as.Date(input$date_range3[2])
       )
   })
+  #To filter data to desired daterange (Shift 1)- Guideplate GD1
   subdata16 <- reactive({
     Gsort %>%
       filter(
@@ -918,6 +1011,7 @@ shinyServer(function(input,output){
         hms(Gsort$Time)<=hms("15H 0M 0S")
       )
   })
+  #To filter data to desired daterange(Shift 2) - Guideplate GD1
   subdata17 <- reactive({
     Gsort %>%
       filter(
@@ -927,6 +1021,7 @@ shinyServer(function(input,output){
         hms(Gsort$Time)<=hms("23H 0M 0S")
       )
   })
+  #To filter data to desired daterange(Shift 3) - Guideplate GD1
   subdata18 <- reactive({
     Gsort %>%
       filter(
@@ -936,29 +1031,35 @@ shinyServer(function(input,output){
         hms(Gsort$Time)<=hms("24H 0M 0S")
       )
   })
+  #To plot guideplate GD1 data
   output$plot3<- renderPlotly({
+    #Datewise data stack
     x<- ggplotly(
       ggplot(subdata15(), mapping= aes(Date,fill=GD1))+
         geom_bar(position = "stack")+theme(axis.text.x = element_text(angle = 45, size = 8))
     )
+    #Datewise data dodge
     if(input$d=="2"){
       x<- ggplotly(
         ggplot(subdata15(), mapping= aes(Date,fill=GD1))+
           geom_bar(position = "dodge")+theme(axis.text.x = element_text(angle = 45, size = 8))
       )
     }
+    #Daywise data stack
     if(input$d=="3"){
       x<- ggplotly(
         ggplot(subdata15(), mapping= aes(wday(Date,label = T),fill=GD1))+
           geom_bar(position = "stack")+xlab("Day")
       )
     }
+    #Daywise data dodge
     if(input$d=="4"){
       x<- ggplotly(
         ggplot(subdata15(), mapping= aes(wday(Date,label = T),fill=GD1))+
           geom_bar(position = "dodge")+xlab("Day")
       ) 
     }
+    #Similarly for various radiobuttons
     if(input$d1=="2"){
       x<- ggplotly(
         ggplot(subdata16(), mapping= aes(Date,fill=GD1))+
@@ -1035,6 +1136,7 @@ shinyServer(function(input,output){
     x$elementId <- NULL
     x
   })
+  #To filter data to desired daterange - Guideplate GD2
   subdata19 <- reactive({
     Gsort %>%
       filter(
@@ -1042,6 +1144,7 @@ shinyServer(function(input,output){
         as.Date(Gsort$Date)<= as.Date(input$date_range4[2])
       )
   })
+  #To filter data to desired daterange(Shift 1) - Guideplate GD2
   subdata20 <- reactive({
     Gsort %>%
       filter(
@@ -1051,6 +1154,7 @@ shinyServer(function(input,output){
         hms(Gsort$Time)<=hms("15H 0M 0S")
       )
   })
+  #To filter data to desired daterange(Shift 2) - Guideplate GD2
   subdata21 <- reactive({
     Gsort %>%
       filter(
@@ -1060,6 +1164,7 @@ shinyServer(function(input,output){
         hms(Gsort$Time)<=hms("23H 0M 0S")
       )
   })
+  #To filter data to desired daterange(Shift 3) - Guideplate GD2
   subdata22 <- reactive({
     Gsort %>%
       filter(
@@ -1069,29 +1174,35 @@ shinyServer(function(input,output){
         hms(Gsort$Time)<=hms("24H 0M 0S")
       )
   })
+  #To plot guideplate GD2 data
   output$plot4<- renderPlotly({
+    #Datewise data stack
     x<- ggplotly(
       ggplot(subdata19(), mapping= aes(Date,fill=GD2))+
         geom_bar(position = "stack")+theme(axis.text.x = element_text(angle = 45, size = 8))
     )
+    #Datewise data dodge
     if(input$g=="2"){
       x<- ggplotly(
         ggplot(subdata19(), mapping= aes(Date,fill=GD2))+
           geom_bar(position = "dodge")+theme(axis.text.x = element_text(angle = 45, size = 8))
       )
     }
+    #Daywise data stack
     if(input$g=="3"){
       x<- ggplotly(
         ggplot(subdata19(), mapping= aes(wday(Date,label = T),fill=GD2))+
           geom_bar(position = "stack")+xlab("Day")
       )
     }
+    #Daywise data dodge
     if(input$g=="4"){
       x<- ggplotly(
         ggplot(subdata19(), mapping= aes(wday(Date,label = T),fill=GD2))+
           geom_bar(position = "dodge")+xlab("Day")
       ) 
     }
+    #Similarly for various radiobuttons
     if(input$g1=="2"){
       x<- ggplotly(
         ggplot(subdata20(), mapping= aes(Date,fill=GD2))+
@@ -1168,6 +1279,7 @@ shinyServer(function(input,output){
     x$elementId <- NULL
     x
   })
+  #To represent no.of parts in a table (Guideplate and PAWL)
   output$table <- renderDataTable({
     PAWL <- as.numeric(c(pgd3a,pgd3b,pgd3c,pgd3r,pgd3a+pgd3b+pgd3c+pgd3r))
     GuidePlateR <- as.numeric(c(ggd2a,ggd2b,ggd2c,ggd2r,ggd2a+ggd2b+ggd2c+ggd2r))
@@ -1176,12 +1288,14 @@ shinyServer(function(input,output){
     a=matrix(Grades,nrow =5, ncol = 4, dimnames = list(c("A","B","C","R","Total"),c("Grade","PAWL","GuidePlate(GD2)","GuidePlate(GD1)")))
     a
   })
+  #To represent no.of parts in a table (Guideplate combinations)
   output$table1 <- renderDataTable({
     GuidePlate <- as.numeric(c(ggd3aa,ggd3ab,ggd3ar,ggd3bb,ggd3bc,ggd3br,ggd3ca,ggd3cc,ggd3cr,ggd3r,ggd3aa+ggd3ab+ggd3ar+ggd3bb+ggd3bc+ggd3br+ggd3ca+ggd3cc+ggd3cr+ggd3r))
     Grades =c(c("AA","AB","AR","BB","BC","BR","CA","CC","CR","R","Total"),GuidePlate)
     a= matrix(Grades,nrow= 11, ncol=2, dimnames=list(c("AA","AB","AR","BB","BC","BR","CA","CC","CR","R","Total"),c("Grade","GuidePlate(Total Grade)")))
     a
   })
+  #To Count accepted and rejected parts in GuidePlate
   guidep = 0;
   guider = 0;
   pawlp = 0;
@@ -1189,23 +1303,30 @@ shinyServer(function(input,output){
   totalp = 0;
   totalr = 0;
   for(i in 1:nrow(Gsort)){
+    #To find no.of accepted parts in GuidePlate
     if(Gsort$GD3[i]!="R")
       guidep=guidep+1;
+    #To find no.of rejected parts in GuidePlate
     if(Gsort$GD3[i]=="R")
       guider=guider+1;
   }
   for(i in 1:nrow(Psort)){
+    #To find no.of accepted parts in PAWL
     if(Psort$GD3[i]!="R")
       pawlp=pawlp+1;
+    #To find no.of rejected parts in PAWL
     if(Psort$GD3[i]=="R")
       pawlr=pawlr+1;
   }
   for(i in 1:nrow(Total)){
+    #To find no.of accepted parts in Total (GuidePlate &PAWL)
     if(Total$GD3[i]!="R")
       totalp=totalp+1;
+    #To find no.of rejected parts in Total (GuidePlate & PAWL)
     if(Total$GD3[i]=="R")
       totalr=totalr+1;
   }
+  #To show overall accepted and rejected parts in table
   output$table2 <- renderDataTable({
     Parts <- as.numeric(c(guidep,pawlp,totalp))
     Rej <- as.numeric(c(guider,pawlr,totalr))
@@ -1214,11 +1335,13 @@ shinyServer(function(input,output){
     a= matrix(Grades,nrow= 3, ncol=4, dimnames=list(c("Guide Plate","PAWL","Total"),c("Part Name","Accepted","Rejected","Total")))
     a
   })
+  #Instructions to operate dashboards (Help)
   observeEvent(input$generate, {
     output$pdfview <- renderUI({
       tags$iframe(style="height:600px; width:100%", src="R IN ACTION.pdf")
     })
   })
+  #To show count of grades as table by varying radiobuttons
   output$tbl1 <- renderDataTable({
     if(input$radio1=="1"){
       count <- as.numeric(c(ggd1a+ggd2a,ggd1b+ggd2b,ggd1c+ggd2c,ggd1r+ggd2r,ggd1a+ggd2a+ggd1b+ggd2b+ggd1c+ggd2c+ggd1r+ggd2r))
@@ -1226,6 +1349,7 @@ shinyServer(function(input,output){
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
     if(input$radio1=="2"){
+      #To count the no.of grades
       a1=0
       b1=0
       c1=0
@@ -1234,6 +1358,7 @@ shinyServer(function(input,output){
       b2=0
       c2=0
       r2=0
+      #To count parts in particular region
       for(i in 1:nrow(subdata1())){
         if(subdata1()$GD1[i]=="A")
           a1=a1+1
@@ -1252,6 +1377,7 @@ shinyServer(function(input,output){
         if(subdata1()$GD2[i]=="R")
           r2=r2+1
       }
+      #To represent in table
       count <- as.numeric(c(a1+a2,b1+b2,c1+c2,r1+r2,a1+a2+b1+b2+c1+c2+r1+r2))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1296,6 +1422,7 @@ shinyServer(function(input,output){
       b2=0
       c2=0
       r2=0
+      #To count no.of parts in each grade in subdata3
       for(i in 1:nrow(subdata3())){
         if(subdata3()$GD1[i]=="A")
           a1=a1+1
@@ -1330,6 +1457,7 @@ shinyServer(function(input,output){
       b2=0
       c2=0
       r2=0
+      #To count no.of parts in each grade in subdata7
       for(i in 1:nrow(subdata7())){
         if(subdata7()$GD1[i]=="A")
           a1=a1+1
@@ -1348,6 +1476,7 @@ shinyServer(function(input,output){
         if(subdata7()$GD2[i]=="R")
           r2=r2+1
       }
+      #To represent in form of table
       count <- as.numeric(c(a1+a2,b1+b2,c1+c2,r1+r2,a1+a2+b1+b2+c1+c2+r1+r2))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1361,6 +1490,7 @@ shinyServer(function(input,output){
       b2=0
       c2=0
       r2=0
+      #To count no.of parts in each grade in subdata8
       for(i in 1:nrow(subdata8())){
         if(subdata8()$GD1[i]=="A")
           a1=a1+1
@@ -1379,6 +1509,7 @@ shinyServer(function(input,output){
         if(subdata8()$GD2[i]=="R")
           r2=r2+1
       }
+      #To represent count inform of table
       count <- as.numeric(c(a1+a2,b1+b2,c1+c2,r1+r2,a1+a2+b1+b2+c1+c2+r1+r2))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1392,6 +1523,7 @@ shinyServer(function(input,output){
       b2=0
       c2=0
       r2=0
+      #To count no.of parts in each grade in subdata9
       for(i in 1:nrow(subdata9())){
         if(subdata9()$GD1[i]=="A")
           a1=a1+1
@@ -1410,6 +1542,7 @@ shinyServer(function(input,output){
         if(subdata9()$GD2[i]=="R")
           r2=r2+1
       }
+      #To represent count inform of a table 
       count <- as.numeric(c(a1+a2,b1+b2,c1+c2,r1+r2,a1+a2+b1+b2+c1+c2+r1+r2))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1423,6 +1556,7 @@ shinyServer(function(input,output){
       b2=0
       c2=0
       r2=0
+      #To count no.of parts in each grade in subdata10
       for(i in 1:nrow(subdata10())){
         if(subdata10()$GD1[i]=="A")
           a1=a1+1
@@ -1441,6 +1575,7 @@ shinyServer(function(input,output){
         if(subdata10()$GD2[i]=="R")
           r2=r2+1
       }
+      #To represent count inform of table
       count <- as.numeric(c(a1+a2,b1+b2,c1+c2,r1+r2,a1+a2+b1+b2+c1+c2+r1+r2))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1458,6 +1593,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata4
       for(i in 1:nrow(subdata4())){
         if(subdata4()$GD3[i]=="A")
           a=a+1
@@ -1468,6 +1604,7 @@ shinyServer(function(input,output){
         if(subdata4()$GD3[i]=="R")
           r=r+1
       }
+      #To represent count inform of a table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1477,6 +1614,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata5
       for(i in 1:nrow(subdata5())){
         if(subdata5()$GD3[i]=="A")
           a=a+1
@@ -1487,6 +1625,7 @@ shinyServer(function(input,output){
         if(subdata5()$GD3[i]=="R")
           r=r+1
       }
+      #To represent count inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1496,6 +1635,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata6
       for(i in 1:nrow(subdata6())){
         if(subdata6()$GD3[i]=="A")
           a=a+1
@@ -1506,6 +1646,7 @@ shinyServer(function(input,output){
         if(subdata6()$GD3[i]=="R")
           r=r+1
       }
+      #To represent count inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1518,6 +1659,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata11
       for(i in 1:nrow(subdata11())){
         if(subdata11()$GD3[i]=="A")
           a=a+1
@@ -1528,6 +1670,7 @@ shinyServer(function(input,output){
         if(subdata11()$GD3[i]=="R")
           r=r+1
       }
+      #To represent count inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1537,6 +1680,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata12
       for(i in 1:nrow(subdata12())){
         if(subdata12()$GD3[i]=="A")
           a=a+1
@@ -1547,6 +1691,7 @@ shinyServer(function(input,output){
         if(subdata12()$GD3[i]=="R")
           r=r+1
       }
+      #To represent count inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1556,6 +1701,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata13
       for(i in 1:nrow(subdata13())){
         if(subdata13()$GD3[i]=="A")
           a=a+1
@@ -1566,6 +1712,7 @@ shinyServer(function(input,output){
         if(subdata13()$GD3[i]=="R")
           r=r+1
       }
+      #To represent count inform of a table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1575,6 +1722,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata14
       for(i in 1:nrow(subdata14())){
         if(subdata14()$GD3[i]=="A")
           a=a+1
@@ -1585,12 +1733,14 @@ shinyServer(function(input,output){
         if(subdata14()$GD3[i]=="R")
           r=r+1
       }
+      #To represent count inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
     a
   })
+  #To show entire count in table
   output$tbl5 <- renderDataTable({
     if(input$x2=="1"){
       count <- as.numeric(c(ggd1a,ggd1b,ggd1c,ggd1r,ggd1a+ggd1b+ggd1c+ggd1r))
@@ -1602,6 +1752,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata1 - GD1
       for(i in 1:nrow(subdata1())){
         if(subdata1()$GD1[i]=="A")
           a=a+1
@@ -1612,6 +1763,7 @@ shinyServer(function(input,output){
         if(subdata1()$GD1[i]=="R")
           r=r+1
       }
+      #To show things in table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1621,6 +1773,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata2 - GD1
       for(i in 1:nrow(subdata2())){
         if(subdata2()$GD1[i]=="A")
           a=a+1
@@ -1631,6 +1784,7 @@ shinyServer(function(input,output){
         if(subdata2()$GD1[i]=="R")
           r=r+1
       }
+      #To show things inform of a table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1640,6 +1794,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata3 - GD1
       for(i in 1:nrow(subdata3())){
         if(subdata3()$GD1[i]=="A")
           a=a+1
@@ -1650,6 +1805,7 @@ shinyServer(function(input,output){
         if(subdata3()$GD1[i]=="R")
           r=r+1
       }
+      #To show things inform of a table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1662,6 +1818,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata15 - GD1
       for(i in 1:nrow(subdata15())){
         if(subdata15()$GD1[i]=="A")
           a=a+1
@@ -1672,6 +1829,7 @@ shinyServer(function(input,output){
         if(subdata15()$GD1[i]=="R")
           r=r+1
       }
+      #As a table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1681,6 +1839,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata16 - GD1
       for(i in 1:nrow(subdata16())){
         if(subdata16()$GD1[i]=="A")
           a=a+1
@@ -1691,6 +1850,7 @@ shinyServer(function(input,output){
         if(subdata16()$GD1[i]=="R")
           r=r+1
       }
+      #As a table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1700,6 +1860,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata17 - GD1
       for(i in 1:nrow(subdata17())){
         if(subdata17()$GD1[i]=="A")
           a=a+1
@@ -1710,6 +1871,7 @@ shinyServer(function(input,output){
         if(subdata17()$GD1[i]=="R")
           r=r+1
       }
+      #As a table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1719,6 +1881,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata18 - GD1
       for(i in 1:nrow(subdata18())){
         if(subdata18()$GD1[i]=="A")
           a=a+1
@@ -1729,12 +1892,14 @@ shinyServer(function(input,output){
         if(subdata18()$GD1[i]=="R")
           r=r+1
       }
+      #Inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
     a
   })
+  #Count of GuidePlate - GD2
   output$tbl7 <- renderDataTable({
     if(input$y2=="1"){
       count <- as.numeric(c(ggd2a,ggd2b,ggd2c,ggd2r,ggd2a+ggd2b+ggd2c+ggd2r))
@@ -1746,6 +1911,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata1 - GD2
       for(i in 1:nrow(subdata1())){
         if(subdata1()$GD2[i]=="A")
           a=a+1
@@ -1756,6 +1922,7 @@ shinyServer(function(input,output){
         if(subdata1()$GD2[i]=="R")
           r=r+1
       }
+      #Inform of a table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1765,6 +1932,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata2 - GD2
       for(i in 1:nrow(subdata2())){
         if(subdata2()$GD2[i]=="A")
           a=a+1
@@ -1775,6 +1943,7 @@ shinyServer(function(input,output){
         if(subdata2()$GD2[i]=="R")
           r=r+1
       }
+      #Inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1784,6 +1953,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata3 - GD2
       for(i in 1:nrow(subdata3())){
         if(subdata3()$GD2[i]=="A")
           a=a+1
@@ -1794,6 +1964,7 @@ shinyServer(function(input,output){
         if(subdata3()$GD2[i]=="R")
           r=r+1
       }
+      #Inform of a table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1806,6 +1977,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata19 - GD2
       for(i in 1:nrow(subdata19())){
         if(subdata19()$GD2[i]=="A")
           a=a+1
@@ -1816,6 +1988,7 @@ shinyServer(function(input,output){
         if(subdata19()$GD2[i]=="R")
           r=r+1
       }
+      #Inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1825,6 +1998,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata20 - GD2
       for(i in 1:nrow(subdata20())){
         if(subdata20()$GD2[i]=="A")
           a=a+1
@@ -1835,6 +2009,7 @@ shinyServer(function(input,output){
         if(subdata20()$GD2[i]=="R")
           r=r+1
       }
+      #Inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1844,6 +2019,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata21 - GD2
       for(i in 1:nrow(subdata21())){
         if(subdata21()$GD2[i]=="A")
           a=a+1
@@ -1854,6 +2030,7 @@ shinyServer(function(input,output){
         if(subdata21()$GD2[i]=="R")
           r=r+1
       }
+      #Inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
@@ -1863,6 +2040,7 @@ shinyServer(function(input,output){
       b=0
       c=0
       r=0
+      #To count no.of parts in each grade in subdata22 - GD2
       for(i in 1:nrow(subdata22())){
         if(subdata22()$GD2[i]=="A")
           a=a+1
@@ -1873,6 +2051,7 @@ shinyServer(function(input,output){
         if(subdata22()$GD2[i]=="R")
           r=r+1
       }
+      #Inform of table
       count <- as.numeric(c(a,b,c,r,a+b+c+r))
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
