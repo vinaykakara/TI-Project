@@ -20,13 +20,14 @@ library(pool)
 
 
 shinyServer(function(input,output){
-   
+   #To give notification if shift.txt file is missing
     if(!file.exists("Shift.txt"))
       showModal(modalDialog(
         title = "Important message",
         "Shift timings file is not present!",
         easyClose = TRUE
       ))
+ #To give notification if Guide and PAWL.txt file is missing
     if(!file.exists("Guide and PAWL.txt"))
       showModal(modalDialog(
         title = "Important message",
