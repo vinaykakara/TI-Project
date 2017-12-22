@@ -13,7 +13,6 @@ library(bubbles)
 library(shinySignals)
 library(xlsx)
 library(pool)
-
 #ip address of sql server
 ip<-"127.0.0.1"
 #database name
@@ -23,6 +22,7 @@ username="tiproject"
 #password of sql table
 password="tiproject"
 
+  
   shinyServer(function(input,output){
     
     #Used to create excel file for saving planned production  if it is not present  
@@ -489,6 +489,8 @@ password="tiproject"
       a<-filter(a,substr(a$Date,1,7)==substr(Sys.Date(),1,7))
       a$NA.<-NULL
       a$Guide<-NULL
+      if(nrow(a)==0)
+        return("No data is present")
       a
     })
     
@@ -524,6 +526,8 @@ password="tiproject"
       a$actual <- NULL
       a$Deviation <- a$deviation
       a$deviation <- NULL
+      if(nrow(a)==0)
+        return("No data is present")
       a
     })
     pawlproduced<-function(date){
@@ -555,6 +559,8 @@ password="tiproject"
       a$actual <- NULL
       a$Deviation <- a$deviation
       a$deviation <- NULL
+      if(nrow(a)==0)
+        return("No data is present")
       a
     })
     
