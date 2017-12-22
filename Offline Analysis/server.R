@@ -11,15 +11,13 @@ library(tidyr)
 library(xts)
 library(pool)
 #ip address of sql server
-ip<-"172.16.19.182"
+ip<-"127.0.0.1"
 #database name
 database="mydb"
 #username of sql table
 username="tiproject"
 #password of sql table
 password="tiproject"
-
-
 
 #used to read data from sql table
 shinyServer(function(input,output){
@@ -1286,14 +1284,18 @@ shinyServer(function(input,output){
     GuidePlateL <- as.numeric(c(ggd1a,ggd1b,ggd1c,ggd1r,ggd1a+ggd1b+ggd1c+ggd1r))
     Grades = (c(c("A","B","C","R","Total"),PAWL, GuidePlateR,GuidePlateL))
     a=matrix(Grades,nrow =5, ncol = 4, dimnames = list(c("A","B","C","R","Total"),c("Grade","PAWL","GuidePlate(GD2)","GuidePlate(GD1)")))
-    a
+    if(nrow(a)==0)
+      return("No data is present")
+     a
   })
   #To represent no.of parts in a table (Guideplate combinations)
   output$table1 <- renderDataTable({
     GuidePlate <- as.numeric(c(ggd3aa,ggd3ab,ggd3ar,ggd3bb,ggd3bc,ggd3br,ggd3ca,ggd3cc,ggd3cr,ggd3r,ggd3aa+ggd3ab+ggd3ar+ggd3bb+ggd3bc+ggd3br+ggd3ca+ggd3cc+ggd3cr+ggd3r))
     Grades =c(c("AA","AB","AR","BB","BC","BR","CA","CC","CR","R","Total"),GuidePlate)
     a= matrix(Grades,nrow= 11, ncol=2, dimnames=list(c("AA","AB","AR","BB","BC","BR","CA","CC","CR","R","Total"),c("Grade","GuidePlate(Total Grade)")))
-    a
+    if(nrow(a)==0)
+      return("No data is present")
+     a
   })
   #To Count accepted and rejected parts in GuidePlate
   guidep = 0;
@@ -1333,7 +1335,9 @@ shinyServer(function(input,output){
     total <- as.numeric(c(guidep+guider,pawlp+pawlr,totalp+totalr))
     Grades =c(c("Guide Plate","PAWL","Total"),Parts,Rej,total)
     a= matrix(Grades,nrow= 3, ncol=4, dimnames=list(c("Guide Plate","PAWL","Total"),c("Part Name","Accepted","Rejected","Total")))
-    a
+    if(nrow(a)==0)
+      return("No data is present")
+      a
   })
   #Instructions to operate dashboards (Help)
   observeEvent(input$generate, {
@@ -1445,6 +1449,8 @@ shinyServer(function(input,output){
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
+    if(nrow(a)==0)
+      return("No data is present")
     a
   })
   output$tbl2 <- renderDataTable({
@@ -1580,6 +1586,8 @@ shinyServer(function(input,output){
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
+    if(nrow(a)==0)
+      return("No data is present")
     a
   })
   output$tbl3 <- renderDataTable({
@@ -1651,6 +1659,8 @@ shinyServer(function(input,output){
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
+    if(nrow(a)==0)
+      return("No data is present")
     a
   })
   output$tbl4 <- renderDataTable({
@@ -1738,6 +1748,8 @@ shinyServer(function(input,output){
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
+    if(nrow(a)==0)
+      return("No data is present")
     a
   })
   #To show entire count in table
@@ -1810,6 +1822,8 @@ shinyServer(function(input,output){
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
+    if(nrow(a)==0)
+      return("No data is present")
     a
   })
   output$tbl6 <- renderDataTable({
@@ -1897,6 +1911,8 @@ shinyServer(function(input,output){
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
+    if(nrow(a)==0)
+      return("No data is present")
     a
   })
   #Count of GuidePlate - GD2
@@ -1969,6 +1985,8 @@ shinyServer(function(input,output){
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
+    if(nrow(a)==0)
+      return("No data is present")
     a
   })
   output$tbl8 <- renderDataTable({
@@ -2056,6 +2074,8 @@ shinyServer(function(input,output){
       Grades =c(c("A","B","C","R","Total"),count)
       a= matrix(Grades,nrow= 5, ncol=2, dimnames=list(c("A","B","C","R","Total"),c("Grade","Count")))
     }
+    if(nrow(a)==0)
+      return("No data is present")
     a
   })
 })
