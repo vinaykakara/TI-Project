@@ -66,6 +66,7 @@ install.packages(c("shiny","shinydashboard","ggplot2","plotly","lubridate","shin
 Install some packages from github
 ```
 devtools::install_github("jcheng5/bubbles")
+devtools::install_github("hadley/shinySignals")
 ```
 If there are any problems install packages see https://www.digitalocean.com/community/tutorials/how-to-install-r-packages-using-devtools-on-ubuntu-16-04
 
