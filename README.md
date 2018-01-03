@@ -124,3 +124,22 @@ Network ip can be known by typing Hostname -I in terminal.
 By diffault shiny apps are under folder /opt/shiny-server/samples/sample-apps in ubuntu. U can copy your app folder inside the sample-apps and you can acssess using http://172.17.15.13:3838/sample-apps/ . Replace 172.17.15.13 with your network-ip.
 
 Befor copying the file to the sample-apps make sure that server,ui and global in a single file App.R
+
+# FAQ:
+1)If your app isnt runnig in after deployed in shiny-server then you can check the error in /var/log/shiny-server.log
+
+2)If you get an error "Error getting worker; application exited during initialization" then got to
+```
+sudo gedit /etc/systemd/system/shiny-server.service
+```
+and add the following line 
+```
+[Service]
+Environment="SHINY_LOG_LEVEL=TRACE"
+```
+Commands to run for the changes to take effect:
+```
+sudo systemctl stop shiny-server
+sudo systemctl daemon-reload
+sudo systemctl start shiny-server
+```
