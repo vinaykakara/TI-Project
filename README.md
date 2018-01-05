@@ -62,7 +62,7 @@ sudo su - -c "R -e \"devtools::install_github('andrewsali/shinycssloaders')\""
 
 Open Rstudio and type the following commands in terminal
 ```
-install.packages(c("shiny","shinydashboard","ggplot2","plotly","lubridate","shinythemes","reshape","dplyr","tidyr","xts","pool","dplyr","shinyjs","xlsx","readxl","DT","pool","bubbles","shinySignals","plyr"))
+install.packages(c("shiny","shinydashboard","ggplot2","plotly","lubridate","shinythemes","shinyjs","reshape","dplyr","tidyr","xts","pool","dplyr","shinyjs","xlsx","readxl","DT","pool","bubbles","shinySignals","plyr"))
 ```
 Install some packages from github
 ```
