@@ -144,3 +144,7 @@ sudo systemctl stop shiny-server
 sudo systemctl daemon-reload
 sudo systemctl start shiny-server
 ```
+4)To give sudo permissions to a folder
+'''
+sudo chmod -R 777 /var/DirectoryName
+'''
