@@ -57,6 +57,7 @@ Some packages are available in github so install devtools to install packages fr
 ```
 sudo su - -c "R -e \"install.packages('devtools', repos='http://cran.rstudio.com/')\""
 sudo su - -c "R -e \"devtools::install_github('daattali/shinyjs')\""
+sudo su - -c "R -e \"devtools::install_github('andrewsali/shinycssloaders')\""
 ```
 
 Open Rstudio and type the following commands in terminal
