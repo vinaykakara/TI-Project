@@ -148,3 +148,18 @@ sudo systemctl start shiny-server
 ```
 sudo chmod -R 777 /var/DirectoryName
 ```
+5)It error is unable to lock
+```
+sudo rm /var/lib/apt/lists/lock
+sudo rm /var/cache/apt/archives/lock
+sudo rm /var/lib/dpkg/lock
+```
+6)To install RMySQL
+```
+sudo apt-get install libdbd-mysql libmysqlclient-dev
+
+```
+open R
+```
+install.packages('RMySQL')
+```
