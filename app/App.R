@@ -45,7 +45,7 @@ shinyServer(function(input,output){
     username = username,
     password = password
   )
-  Psort<-dbReadTable(mydb,"pawl")
+  Psort<-dbReadTable(mydb,"guide")
   Gsort<-dbReadTable(mydb,"guide")
   poolClose(mydb) 
   #used to change column names of a table
