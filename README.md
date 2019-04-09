@@ -4,7 +4,7 @@ This tutorial helps to learn about deploying shiny apps in shiny server from scr
 
 In this tutorial we will discuss about how to install **R,Rstudio,Shiny server**
 
-Ihis tutorial is based upon 64 bit ubuntu system. 
+Ihis tutorial is based upon 64 bit ubuntu. 
 
 # Install R
 Open termial in ubuntu and type the following:
